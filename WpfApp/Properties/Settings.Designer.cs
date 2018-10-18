@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WinFormApp.Properties
+namespace WpfApp.Properties
 {
 
 
