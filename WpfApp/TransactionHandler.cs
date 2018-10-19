@@ -9,21 +9,24 @@ namespace WpfApp
 {
     class TransactionHandler
     {
+        Random random;
+        public TransactionHandler(int seed = 0)
+        {
+            random = new Random(seed);
+        }
         /// <summary>
         /// wrapper call a transaction method
         /// </summary>
         /// <param name="IdThingy"></param>
         /// <returns></returns>
-        public async Task<string> GetTransactionId(string IdThingy, IProgress<long> progress)
+        public async Task<string> GetTransactionId(string IdThingy)
         {
             switch (IdThingy)
             {
                 case string id when id.Contains("fail"):
-                    return await FaultyTransaction(progress);
-                case string id when id.Contains("long"):
-                    return await LongTransaction(progress);
+                    return await FaultyTransaction();
                 case string id when id.Contains("ok"):
-                    return await IdealTransaction(progress);
+                    return await IdealTransaction();
                 default:
                     return "unknown transaction";
             }
@@ -33,42 +36,15 @@ namespace WpfApp
         /// a faulty transaction, will always error
         /// </summary>
         /// <returns></returns>
-        async Task<string> FaultyTransaction(IProgress<long> progress)
+        async Task<string> FaultyTransaction()
         {
-            await Task.Run(() =>
-            {
-                for (int i = 0; i < 100; i++)
-                {
-                    Thread.Sleep(20);
-                    progress.Report(i);
-                }
-            });
+            await Task.Delay(random.Next(15000));
             throw new InvalidOperationException("faulty transaction");
         }
 
-        async Task<string> LongTransaction(IProgress<long> progress)
+        async Task<string> IdealTransaction()
         {
-            await Task.Run(() =>
-            {
-                for (int i = 0; i < 100; i++)
-                {
-                    Thread.Sleep(200);
-                    progress.Report(i);
-                }
-            });
-            return "id";
-        }
-
-        async Task<string> IdealTransaction(IProgress<long> progress)
-        {
-            await Task.Run(() =>
-            {
-                for (int i = 0; i < 100; i++)
-                {
-                    Thread.Sleep(20);
-                    progress.Report(i);
-                }
-            });
+            await Task.Delay(random.Next(15000));
             return "id";
         }
     }

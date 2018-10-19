@@ -73,13 +73,7 @@ namespace WpfApp
         private async void button_createIdealTask_Click(object sender, RoutedEventArgs e)
         {
             (TaskViewModel task, IProgress<long> progress) = CreateTask("ideal");
-            task.Result = await handler.GetTransactionId("ok", progress);
-        }
-
-        private async void button_createLongTask_Click(object sender, RoutedEventArgs e)
-        {
-            (TaskViewModel task, IProgress<long> progress) = CreateTask("long");
-            task.Result = await handler.GetTransactionId("long", progress);
+            task.Result = await handler.GetTransactionId("ok");
         }
 
         private async void button_createFaultyTask_Click(object sender, RoutedEventArgs e)
@@ -87,46 +81,12 @@ namespace WpfApp
             (TaskViewModel task, IProgress<long> progress) = CreateTask("faulty");
             try
             {
-                task.Result = await handler.GetTransactionId("fail", progress);
+                task.Result = await handler.GetTransactionId("fail");
             }
             catch (InvalidOperationException)
             {
                 task.Result = "failed";
             }
-        }
-
-        private async void button_createIdealTask_bulk_Click(object sender, RoutedEventArgs e)
-        {
-            await Task.Run(() => Parallel.For(0, 5, async (i) =>
-             {
-                 (TaskViewModel task, IProgress<long> progress) = CreateTask("ideal");
-                 task.Result = await handler.GetTransactionId("ok", progress);
-             }));
-        }
-
-        private async void button_createLongTask_Copy_Click(object sender, RoutedEventArgs e)
-        {
-            await Task.Run(() => Parallel.For(0, 5, async (i) =>
-            {
-                (TaskViewModel task, IProgress<long> progress) = CreateTask("long");
-                task.Result = await handler.GetTransactionId("long", progress);
-            }));
-        }
-
-        private async void button_createFaultyTask_bulk_Click(object sender, RoutedEventArgs e)
-        {
-            await Task.Run(() => Parallel.For(0, 5, async (i) =>
-            {
-                (TaskViewModel task, IProgress<long> progress) = CreateTask("faulty");
-                try
-                {
-                    task.Result = await handler.GetTransactionId("fail", progress);
-                }
-                catch (InvalidOperationException)
-                {
-                    task.Result = "failed";
-                }
-            }));
         }
     }
 }

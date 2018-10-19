@@ -15,13 +15,16 @@
                     <GridViewColumn Width="200" Header="Result" DisplayMemberBinding="{Binding Path=Result}" />
                 </GridView>
             </ListView.View>
+            <ListView.ContextMenu>
+                <ContextMenu >
+                    <MenuItem Header="Cancel"
+                              Command=""
+                              />
+                </ContextMenu>
+            </ListView.ContextMenu>
         </ListView>
         <Button x:Name="button_createIdealTask" Content="Create Ideal task" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="195" Height="55" Click="button_createIdealTask_Click"/>
-        <Button x:Name="button_createFaultyTask" Content="Create Faulty task" HorizontalAlignment="Left" Margin="10,130,0,0" VerticalAlignment="Top" Width="195" Height="55" Click="button_createFaultyTask_Click"/>
-        <Button x:Name="button_createLongTask" Content="Create Long task" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Width="195" Height="55" Click="button_createLongTask_Click"/>
-        <Button x:Name="button_createIdealTask_bulk" Content="Create 5 Ideal task" HorizontalAlignment="Left" Margin="10,190,0,0" VerticalAlignment="Top" Width="195" Height="55" Click="button_createIdealTask_bulk_Click"/>
-        <Button x:Name="button_createFaultyTask_bulk" Content="Create 5 Faulty task" HorizontalAlignment="Left" Margin="10,310,0,0" VerticalAlignment="Top" Width="195" Height="55" Click="button_createFaultyTask_bulk_Click" />
-        <Button x:Name="button_createLongTask_Copy" Content="Create Long task" HorizontalAlignment="Left" Margin="10,250,0,0" VerticalAlignment="Top" Width="195" Height="55" Click="button_createLongTask_Copy_Click" />
+        <Button x:Name="button_createFaultyTask" Content="Create Faulty task" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Width="195" Height="55" Click="button_createFaultyTask_Click"/>
 
     </Grid>
 </Window>

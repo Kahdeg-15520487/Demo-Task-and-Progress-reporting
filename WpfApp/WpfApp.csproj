@@ -59,6 +59,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="TransactionHandler.cs" />
+    <Compile Include="WPF_CustomCommands\CustomCommands.cs" />
     <Compile Include="WPF_ViewModel\TaskViewModel.cs" />
     <Compile Include="WPF_ViewModel\WindowsViewModel.cs" />
     <Page Include="MainWindow.xaml">
