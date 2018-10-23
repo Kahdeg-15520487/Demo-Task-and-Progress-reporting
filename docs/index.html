@@ -289,6 +289,17 @@ private static async Task UntilCompletionOrCancellation(
     return asyncOp;
 }
 ```
+---
+
+#Task.WhenAny Early bailout
+There is a problem with this pattern.
+
+.bold[Know when you’ve passed the point of no cancellation]
+
+Don’t cancel if you’ve already incurred .bold[side-effects] that your method isn’t prepared to revert on the way out that would leave you in an inconsistent state.
+
+So if you’ve done some work, and have a lot more to do, and the token is cancelled, you must only cancel when and if you can do so leaving objects in a valid state.
+
 
 
     </textarea>
