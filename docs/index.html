@@ -4,16 +4,27 @@
     <title>Title</title>
     <meta charset="utf-8">
     <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+	@import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+	@import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+	@import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
-      body { font-family: 'Droid Serif'; }
-      h1, h2, h3 {
-        font-family: 'Yanone Kaffeesatz';
-        font-weight: normal;
-      }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+	body { font-family: 'Droid Serif'; }
+	h1, h2, h3 {
+	font-family: 'Yanone Kaffeesatz';
+	font-weight: normal;
+	}
+	.remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+	.green {color:Green}
+	table {
+		border-collapse: collapse;
+	}
+	th, td {
+		padding: 5px;
+		border: 1px solid gray;
+	}
+	.bold{
+		font-weight: bold;
+	}
     </style>
   </head>
   <body>
@@ -21,15 +32,264 @@
 
 class: center, middle
 
-# Title
+# Asynchronous programming patterns
+## Task-based Asynchronous Pattern (TAP)
 
 ---
 
-# Agenda
+# Different method for intializing and executing task.
+```csharp
+- Task.Run
+- Task.Factory.*
+- TaskCompletionSource<TResult>
+```
+---
+
+# Different method for intializing and executing task.
+
+- .bold[Task.Run], .bold[Task.Factory.*] will handle the completion of task, making sure that a task will end(completed) for any one that await it.
+
+- .bold[TaskCompletionSource] type enables you as a developer control over a task’s lifecycle. You will be the one to say when will the task end
+by calling one of the Set* or TrySet* methods on the completion source.
+
 
 ---
 
-# Introduction
+# Task's status
+The .green[Task] class provides a life cycle for asynchronous operations, and that cycle is represented by the .green[TaskStatus] enumeration.
+---
+
+# TaskStatus
+Status | Meaning
+------ | -------
+Canceled | The task is cancelled
+Created | The task is created using Task's constructor but haven't been Run yet
+Faulted | The task completed due to an unhandled exception.
+RanToCompletion | The task completed execution successfully.
+Running | The task is running but has not yet completed.
+---
+
+# Cancellation
+In TAP, cancellation is .bold[optional] for both asynchronous method implementers and asynchronous method consumers.
+
+If an operation does not allow cancellation, it's execution will continue until either it .green[Faulted] or .green[RanToCompletion].
+
+If an operation allows cancellation, it exposes an overload of the asynchronous method that accepts a cancellation token (CancellationToken instance). 
+
+Example:
+```csharp
+public Task ReadAsync(byte [] buffer, int offset, int count, 
+                      CancellationToken cancellationToken)
+
+var cts = new CancellationTokenSource();
+string result = await ReadAsync(buffer, offset, count, cts.Token);
+… // at some point later, potentially on another thread
+cts.Cancel();					  
+```
+---
+
+#Progress Reporting 
+
+Some asynchronous operations benefit from providing progress notifications.
+
+In TAP, progress is handled through an IProgress interface, which is passed to the asynchronous method as a parameter.
+
+Example:
+```csharp
+public Task ReadAsync(byte[] buffer, int offset, int count, 
+                      IProgress<long> progress)
+```
+---
+
+class: center, middle
+
+#Consuming the Task-based Asynchronous Pattern
+---
+
+#Suspending Execution with Await
+
+You can use the await keyword in C# to asynchronously await Task objects.
+
+Example:
+
+```csharp
+public Task ReadAsync(byte[] buffer, int offset, int count)
+
+var readResult = await ReadAsync();
+```
+---
+
+#Continual task
+Use the overloads of the Task.ContinueWith method. This method creates a new task that is scheduled when another task completes.
+
+Use the TaskFactory.ContinueWhenAll and TaskFactory.ContinueWhenAny methods. These methods create a new task that is scheduled when all or any of a supplied set of tasks completes.
+
+Example:
+```csharp
+//a list of task
+List<Task> tasks = new List<Task>();
+
+//will be run after the task list is all completed
+Task.Factory.ContinueWhenAll(tasks.ToArray(), result => {Console.WriteLine(result);});
+
+//will be run after any task in the task list is completed
+Task.Factory.ContinueWhenAny(tasks.ToArray(), result => {Console.WriteLine(result);});
+```
+---
+
+class: center, middle
+
+#Other construct in TAP
+---
+#Task.Delay
+
+Introduce pauses in an async method.
+
+Such pauses will not occupy a thread and thus let other task execute.
+
+Example: status polling task
+```csharp
+private async Task DoWorkAsyncInfiniteLoop()
+{
+    while (true)
+    {
+        // do the work in the loop
+        string newData = DateTime.Now.ToLongTimeString();
+
+        // update the UI
+        txtTicks.Text = "ASYNC LOOP - " + newData;
+
+        // don't run again for at least 200 milliseconds
+        await Task.Delay(200);
+    }
+}
+```
+---
+
+#Task.WhenAll
+
+Await multiple async method
+
+Example: wait for email sending's result
+```csharp
+IEnumerable<Task> asyncOps = from addr in addrs select SendMailAsync(addr);
+await Task.WhenAll(asyncOps);
+```
+---
+
+#Task.WhenAny
+Usage:
+- Redundancy
+- Interleaving
+- Throttling
+- Early bailout
+
+---
+
+#Task.WhenAny Redundancy
+Performing an operation multiple times and selecting the one that completes first
+
+Example: getting stock info
+```csharp
+var recommendations = new List<Task<bool>>()
+{
+    GetBuyRecommendation1Async(symbol),
+    GetBuyRecommendation2Async(symbol),
+    GetBuyRecommendation3Async(symbol)
+};
+Task<bool> recommendation = await Task.WhenAny(recommendations);
+
+//will buy the stock according to the first to complete recommendation
+if (await recommendation) BuyStock(symbol);
+```
+---
+
+#Task.WhenAny Interleaving
+Launching multiple operations and waiting for all of them to complete, but processing them as they complete.
+
+Example: download and show image as soon as each image done loading
+```csharp
+List<Task<Bitmap>> imageTasks = (from imageUrl in urls select GetBitmapAsync(imageUrl)).ToList();
+while(imageTasks.Count > 0)
+{
+    try
+    {
+        Task<Bitmap> imageTask = await Task.WhenAny(imageTasks);
+        imageTasks.Remove(imageTask);
+
+        Bitmap image = await imageTask;
+        panel.AddImage(image);
+    }
+    catch{}
+}
+```
+---
+
+#Task.WhenAny Throttling
+Launching multiple operations but only allow a limited amount of operation to run at the same time.
+---
+
+#Task.WhenAny Early bailout
+For example, an operation represented by task .bold[T1] can be grouped in a .bold[WhenAny] task with another task .bold[T2], and you can wait on the .bold[WhenAny] task. 
+
+Task .bold[T2] could represent a .bold[time-out], or .bold[cancellation], or some other signal that causes the .bold[WhenAny] task to complete before .bold[T1] completes.
+---
+
+#Task.WhenAny Early bailout
+Example: User want to download image, have the image display as soon as it is loaded, but also is able to cancel image download.
+```csharp
+//use a CancellationToken to control execution of the cancel task
+private CancellationTokenSource m_cts;
+
+public void btnCancel_Click(object sender, EventArgs e)
+{
+	//cancel the CancellationToken
+    m_cts?.Cancel();
+}
+```
+---
+
+#Task.WhenAny Early bailout
+```csharp
+public async void btnRun_Click(object sender, EventArgs e)
+{
+    m_cts = new CancellationTokenSource();
+    btnRun.Enabled = false;
+    try
+    {
+		//get the work task
+        Task<Bitmap> imageDownload = GetBitmapAsync(txtUrl.Text);
+		
+		//await its completion and also give it the CancellationToken
+        await UntilCompletionOrCancellation(imageDownload, m_cts.Token);
+        if (imageDownload.IsCompleted)
+        {
+            Bitmap image = await imageDownload;
+            panel.AddImage(image);
+        }
+        else imageDownload.ContinueWith(t => Log(t));
+    }
+    finally { btnRun.Enabled = true; }
+}
+```
+---
+
+#Task.WhenAny Early bailout
+```csharp
+private static async Task UntilCompletionOrCancellation(
+    Task asyncOp, CancellationToken ct)
+{
+	//use TaskCompletionSource to control the task's lifecycle
+    var tcs = new TaskCompletionSource<bool>();
+	//register an action to be run when cancellationToken is cancelled
+	//that action being complete the async task
+    using(ct.Register(() => tcs.TrySetResult(true))){
+        await Task.WhenAny(asyncOp, tcs.Task);
+	}
+    return asyncOp;
+}
+```
+
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">

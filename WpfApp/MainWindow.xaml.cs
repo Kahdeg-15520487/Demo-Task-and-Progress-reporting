@@ -78,7 +78,7 @@ namespace WpfApp
 
         private async void button_createFaultyTask_Click(object sender, RoutedEventArgs e)
         {
-            (TaskViewModel task, IProgress<long> progress) = CreateTask("faulty");
+               (TaskViewModel task, IProgress<long> progress) = CreateTask("faulty");
             try
             {
                 task.Result = await handler.GetTransactionId("fail");
