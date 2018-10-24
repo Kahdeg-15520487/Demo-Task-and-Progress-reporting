@@ -227,6 +227,45 @@ while(imageTasks.Count > 0)
 
 #Task.WhenAny Throttling
 Launching multiple operations but only allow a limited amount of operation to run at the same time.
+
+Example: batch downloading image from a request-limited host
+```csharp
+//only allow 15 task to run at the same time
+const int CONCURRENCY_LEVEL = 15;
+Uri [] urls = …;
+int nextIndex = 0;
+var imageTasks = new List<Task<Bitmap>>();
+//intialize task list
+while(nextIndex < CONCURRENCY_LEVEL && nextIndex < urls.Length)
+{
+    imageTasks.Add(GetBitmapAsync(urls[nextIndex]));
+    nextIndex++;
+}
+```
+---
+
+#Task.WhenAny Throttling
+```csharp
+while(imageTasks.Count > 0)
+{
+    try
+    {
+        //
+        Task<Bitmap> imageTask = await Task.WhenAny(imageTasks);
+        imageTasks.Remove(imageTask);
+
+        Bitmap image = await imageTask;
+        panel.AddImage(image);
+    }
+    catch(Exception exc) { Log(exc); }
+
+    if (nextIndex < urls.Length)
+    {
+        imageTasks.Add(GetBitmapAsync(urls[nextIndex]));
+        nextIndex++;
+    }
+}
+```
 ---
 
 #Task.WhenAny Early bailout
